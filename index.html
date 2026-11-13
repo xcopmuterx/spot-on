@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantone Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div><h1>Pantone Finder</h1>
+  <p>Drop an image. Get its main colours and their nearest Pantone references.</p></div>
+  <button id="newSearch" class="primary" hidden>New search</button>
+</header>
+<main>
+<section class="left">
+  <div id="drop" tabindex="0">
+    <div class="hint"><b>Drop an image here</b><br>or click to choose a file, or paste with ⌘V / Ctrl V</div>
+    <img id="preview" alt="">
+    <div id="marker"></div>
+    <div id="areaBox"></div>
+  </div>
+  <input type="file" id="file" accept="image/*" hidden>
+  <div class="strip" id="strip" hidden></div>
+  <div class="controls">
+    <div>
+      <div class="row"><label for="k">Number of colours</label><span class="small mono" id="kv">6</span></div>
+      <input type="range" id="k" min="2" max="12" value="6">
+    </div>
+    <div>
+      <label for="lib">Pantone library</label>
+      <select id="lib">
+        <option value="pmsu">Solid Uncoated (U)</option>
+        <option value="pmsc">Solid Coated (C)</option>
+        <option value="tcx">Fashion + Home (TCX)</option>
+        <option value="mine">My swatches only</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="incMine" checked> Include my swatches</label>
+    </div>
+    <div>
+      <label for="ign">Ignore near-white / near-black</label>
+      <select id="ign">
+        <option value="0">No</option>
+        <option value="1">Ignore near-white</option>
+        <option value="2">Ignore both</option>
+      </select>
+    </div>
+    <div>
+      <label for="clickMode">Click on the image to</label>
+      <select id="clickMode">
+        <option value="sample">Sample a colour</option>
+        <option value="area">Select an area</option>
+        <option value="white">Set white reference</option>
+      </select>
+      <div class="small" id="wbState" style="margin-top:6px"></div>
+    </div>
+    <div class="btns">
+      <button id="clearPick" disabled>Clear picked</button>
+      <button id="clearArea" disabled>Clear area</button>
+      <button id="clearWb" disabled>Clear white ref.</button>
+    </div>
+  </div>
+  <p class="small" style="margin-top:14px">Press and hold on the image to get a magnifier, move to the exact spot, then let go to sample it. Switch to “Select an area” and drag a box to analyse only part of the image, for example to leave out the table. If the photo has white paper in it, set it as the white reference to correct the colour cast and exposure.</p>
+  <details id="mineBox">
+    <summary>My swatches <span class="small" id="mineCount"></span></summary>
+    <p class="small">For inks missing from the built-in lists, or to match your own scans. One per line: name, then hex. Saved in this browser only, so copy the list to keep a backup.</p>
+    <textarea id="mineText" class="mono" rows="6" spellcheck="false" placeholder="2421 U, #4FA847&#10;Riso Fluo Pink, #FF48B0"></textarea>
+    <div class="row" style="gap:8px;justify-content:flex-start;margin-top:8px"><button id="mineSave">Save</button><button id="mineCopy">Copy list</button><span class="small" id="mineMsg"></span></div>
+  </details>
+</section>
+<section class="right">
+  <div class="tabs"><h2 id="resTitle">Results</h2><button id="copyAll" disabled>Copy list</button></div>
+  <div id="results"><div class="empty">No image yet.</div></div>
+</section>
+</main>
+<footer>
+  <p>Colours are grouped with k-means clustering in CIELAB space. Matches use ΔE 2000. Under 2 is a close match, 2–5 is visible side by side, over 5 means the colour has no close Pantone equivalent.</p>
+  <p>Pantone values here are sRGB screen approximations from open-source lists (npm packages <span class="mono">color2library</span> for PANTONE+ Solid Coated and Uncoated, and <span class="mono">nearest-pantone</span> for TCX, both MIT). They are not official Pantone data. Newer colours, such as most of the 2000 series, are missing. Add those under My swatches. Screen colour depends on the photo and the display. Always confirm against a physical Pantone guide before going to print.</p>
+</footer>
+<div id="loupe"><canvas id="loupeCanvas" width="160" height="160"></canvas><div class="lbar"><span id="loupeSw"></span><span id="loupeHex" class="mono"></span></div></div>
+<div id="toast"></div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
