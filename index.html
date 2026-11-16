@@ -78,6 +78,7 @@
 <footer>
   <p>Colours are grouped with k-means clustering in CIELAB space. Matches use ΔE 2000. Under 2 is a close match, 2–5 is visible side by side, over 5 means the colour has no close Pantone equivalent.</p>
   <p>Pantone values here are sRGB screen approximations from open-source lists (npm packages <span class="mono">color2library</span> for PANTONE+ Solid Coated and Uncoated, and <span class="mono">nearest-pantone</span> for TCX, both MIT). They are not official Pantone data. Newer colours, such as most of the 2000 series, are missing. Add those under My swatches. Screen colour depends on the photo and the display. Always confirm against a physical Pantone guide before going to print.</p>
+  <p>CMYK values are converted from the on-screen colour with the FOGRA39 coated offset profile (relative colorimetric, black point compensation). They are a starting point for process printing, not Pantone’s own CMYK bridge values. An asterisk means the colour is outside the CMYK gamut and can’t be matched exactly. Click any CMYK value to copy it.</p>
 </footer>
 <div id="loupe"><canvas id="loupeCanvas" width="160" height="160"></canvas><div class="lbar"><span id="loupeSw"></span><span id="loupeHex" class="mono"></span></div></div>
 <div id="toast"></div>

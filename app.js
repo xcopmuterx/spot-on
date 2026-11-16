@@ -46,6 +46,21 @@ const hexToRgb=h=>[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(
 const rgbToHex=(r,g,b)=>"#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();
 const titleCase=s=>s.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
+// ---------- CMYK (FOGRA39) ----------
+const CMYK=(()=>{const bin=atob(CMYKLUT.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u})();
+function toCmyk(rgb){
+  const n=CMYKLUT.n,s=(n-1)/255,f=rgb.map(v=>v*s),i0=f.map(v=>Math.min(n-2,Math.floor(v))),t=f.map((v,j)=>v-i0[j]);
+  const out=[0,0,0,0,0];
+  for(let dr=0;dr<2;dr++)for(let dg=0;dg<2;dg++)for(let db=0;db<2;db++){
+    const w=(dr?t[0]:1-t[0])*(dg?t[1]:1-t[1])*(db?t[2]:1-t[2]);if(!w)continue;
+    const idx=(((i0[0]+dr)*n+(i0[1]+dg))*n+(i0[2]+db))*5;
+    for(let k=0;k<5;k++)out[k]+=w*CMYK[idx+k];
+  }
+  return {c:Math.round(out[0]),m:Math.round(out[1]),y:Math.round(out[2]),k:Math.round(out[3]),gamut:out[4]<=5};
+}
+const cmykText=x=>`${x.c} ${x.m} ${x.y} ${x.k}`;
+const cmykCells=x=>`<span class="cmyk mono" data-copy="C${x.c} M${x.m} Y${x.y} K${x.k}" title="CMYK, FOGRA39 coated${x.gamut?"":". Outside the CMYK gamut, this is the closest possible"}">${[x.c,x.m,x.y,x.k].map(v=>`<i>${v}</i>`).join("")}${x.gamut?"":`<b class="og">*</b>`}</span>`;
+
 // ---------- libraries ----------
 const LIBS={
   pmsc:PMSC.map(([n,h])=>({name:"PANTONE "+n+" C",sub:"",hex:"#"+h.toUpperCase(),lab:rgbToLab(...hexToRgb(h))})),
@@ -161,16 +176,16 @@ function block(c,label,isPick){
   const lib=$("lib").value;const m=nearest(c.lab,lib,3);
   const save=isPick?`<div class="save"><input id="saveName" placeholder="Name this ink, e.g. 2421 U"><button id="saveBtn">Add to my swatches</button></div>`:"";
   if(!m.length)return{html:`<div class="color"><div class="sw" style="background:${c.hex}"></div><div><div class="meta"><span class="hex mono" data-copy="${c.hex}">${c.hex}</span><span class="tag">${label}</span></div><div class="small">No swatches in this library yet.</div>${save}</div></div>`,best:null};
-  const rows=m.map((x,i)=>{const [cls]=q(x.d);return `<div class="m${i===0?" best":""}" data-copy="${esc(x.p.name)}"><div class="chip" style="background:${x.p.hex}"></div><div class="nm">${esc(x.p.name)}${x.p.sub?` <span class="small">· ${esc(x.p.sub)}</span>`:""}${x.p.own?`<span class="own">mine</span>`:""}</div><div class="de mono"><span class="${cls}">ΔE ${x.d.toFixed(1)}</span> <span class="small">${x.p.hex}</span></div></div>`}).join("");
+  const rows=m.map((x,i)=>{const [cls]=q(x.d);return `<div class="m${i===0?" best":""}" data-copy="${esc(x.p.name)}"><div class="chip" style="background:${x.p.hex}"></div><div class="nm">${esc(x.p.name)}${x.p.sub?` <span class="small">· ${esc(x.p.sub)}</span>`:""}${x.p.own?`<span class="own">mine</span>`:""}</div><div class="de mono"><span class="${cls}">ΔE ${x.d.toFixed(1)}</span> <span class="small hx">${x.p.hex}</span>${cmykCells(toCmyk(hexToRgb(x.p.hex.slice(1))))}</div></div>`}).join("");
   const [cls,word]=q(m[0].d);
-  return {html:`<div class="color"><div class="sw" style="background:${c.hex}"></div><div><div class="meta"><span class="hex mono" data-copy="${c.hex}">${c.hex}</span><span class="small mono">RGB ${c.rgb.join(" ")}</span><span class="tag">${label}</span><span class="tag ${cls}">${word}</span></div><div class="matches">${rows}</div>${save}</div></div>`,best:m[0]};
+  return {html:`<div class="color"><div class="sw" style="background:${c.hex}"></div><div><div class="meta"><span class="hex mono" data-copy="${c.hex}">${c.hex}</span><span class="small mono">RGB ${c.rgb.join(" ")}</span>${(()=>{const k=toCmyk(c.rgb);return `<span class="small mono" data-copy="C${k.c} M${k.m} Y${k.y} K${k.k}" style="cursor:pointer" title="CMYK, FOGRA39 coated">CMYK ${cmykText(k)}</span>${k.gamut?"":`<span class="tag" title="This colour can’t be reproduced exactly in CMYK">outside CMYK</span>`}`})()}<span class="tag">${label}</span><span class="tag ${cls}">${word}</span></div><div class="matches">${rows}</div>${save}</div></div>`,best:m[0]};
 }
 let lastList="";
 function render(){
   const out=[],list=[];
-  const fmt=b=>b.best?`${b.best.p.name} (ΔE ${b.best.d.toFixed(1)})`:"no match";
-  if(picked){const b=block(picked,"picked",true);out.push(b.html);list.push(`Picked ${picked.hex} → ${fmt(b)}`);}
-  clusters.forEach((c,i)=>{const b=block(c,Math.round(c.share*100)+"%");out.push(b.html.replace('<div class="color">',`<div class="color" id="clr-${i}">`));list.push(`${c.hex} ${Math.round(c.share*100)}% → ${fmt(b)}`);});
+  const fmt=b=>b.best?`${b.best.p.name} (ΔE ${b.best.d.toFixed(1)}, CMYK ${cmykText(toCmyk(hexToRgb(b.best.p.hex.slice(1))))})`:"no match";
+  if(picked){const b=block(picked,"picked",true);out.push(b.html);list.push(`Picked ${picked.hex} (CMYK ${cmykText(toCmyk(picked.rgb))}) → ${fmt(b)}`);}
+  clusters.forEach((c,i)=>{const b=block(c,Math.round(c.share*100)+"%");out.push(b.html.replace('<div class="color">',`<div class="color" id="clr-${i}">`));list.push(`${c.hex} ${Math.round(c.share*100)}% (CMYK ${cmykText(toCmyk(c.rgb))}) → ${fmt(b)}`);});
   $("results").innerHTML=out.length?out.join(""):`<div class="empty">${pixels?"No colours left after filtering.":"No image yet."}</div>`;
   $("resTitle").textContent=clusters.length?`${clusters.length} main colours`:"Results";
   const st=$("strip");st.hidden=!clusters.length;st.innerHTML=clusters.map((c,i)=>`<div data-i="${i}" title="${c.hex} · ${Math.round(c.share*100)}%" style="background:${c.hex};flex:${c.share}"></div>`).join("");

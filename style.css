@@ -44,7 +44,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
 .tabs h2{font-size:13px;font-weight:var(--w13);margin:0 auto 0 0;color:var(--mute)}
 .empty{color:var(--mute);padding:40px 0}
-.color{display:grid;grid-template-columns:76px 1fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+.color{display:grid;grid-template-columns:76px minmax(0,1fr);gap:16px;padding:16px 0;border-top:1px solid var(--line)}
 .color:first-child{border-top:0;padding-top:0}
 .sw{width:76px;height:76px;border-radius:3px;border:1px solid rgba(0,0,0,.08)}
 .meta{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
@@ -52,12 +52,17 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .meta .hex:hover{text-decoration:underline}
 .tag{font-size:11px;font-weight:var(--w11);padding:1px 6px;border:1px solid var(--line);border-radius:10px;color:var(--mute)}
 .matches{display:grid;gap:5px}
-.m{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;cursor:pointer;padding:3px 4px;margin:0 -4px;border-radius:3px}
+.m{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;cursor:pointer;padding:3px 4px;margin:0 -4px;border-radius:3px}
 .m:hover{background:var(--line)}
 .m .chip{width:30px;height:22px;border-radius:2px;border:1px solid rgba(0,0,0,.08)}
 .m .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m.best .nm{font-weight:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-.m .de{text-align:right;color:var(--mute)}
+.m .de{text-align:right;color:var(--mute);white-space:nowrap;display:flex;gap:12px;align-items:baseline;justify-content:flex-end}
+.cmyk{display:inline-flex;color:var(--mute);cursor:pointer;position:relative;padding-right:1.2ch}
+.cmyk i{font-style:normal;display:inline-block;width:3.2ch;text-align:right}
+.cmyk:hover,.meta [data-copy]:hover{color:var(--fg)}
+.cmyk .og{position:absolute;right:0;font-weight:inherit;color:var(--mute)}
+@media (max-width:640px){.m{grid-template-columns:30px minmax(0,1fr)}.m .de{grid-column:2;justify-content:flex-start}}
 .q0{color:#2f7d43}.q1{color:#a8761a}.q2{color:#b03a2e}
 @media (prefers-color-scheme:dark){.q0{color:#6fc487}.q1{color:#e2b45a}.q2{color:#ec7b6f}}
 .btns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
